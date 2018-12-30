@@ -841,6 +841,8 @@ namespace GameServerApp.Controller
                 role.Cri = entity.Cri;
                 role.Res = entity.Res;
                 role.Fighting = entity.Fighting;
+                role.Money = entity.Money;
+                role.Gold = entity.Gold;
 
                 role.PrevWorldMapId = entity.LastInWorldMapId;
                 role.LastInWorldMapId = entity.LastInWorldMapId;
