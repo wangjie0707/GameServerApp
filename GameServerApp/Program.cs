@@ -14,7 +14,7 @@ namespace GameServerApp
 {
     class Program
     {
-        private static string m_ServerIP = "192.168.31.135";
+        private static string m_ServerIP = "192.168.31.172";
         private static int m_Port = 1038;
         private static Socket m_ServerSocket;
 
@@ -108,7 +108,7 @@ namespace GameServerApp
 
                 Console.WriteLine("客户端{0}已经连接", socket.RemoteEndPoint.ToString());
 
-                if (((IPEndPoint)socket.RemoteEndPoint).Address.ToString() == "192.168.31.135")
+                if (((IPEndPoint)socket.RemoteEndPoint).Address.ToString() == "192.168.31.172")
                 {
                     RechargeCtrl.Instance.Recharge(socket);
                 }
