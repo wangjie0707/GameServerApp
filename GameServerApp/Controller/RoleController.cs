@@ -63,26 +63,6 @@ namespace GameServerApp.Controller
             EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Task_SearchTask, OnTaskSearchTask);
             #endregion
 
-            #region 商城背包
-            //客户端发送购买商城物品消息
-            EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Shop_BuyProduct, OnShopBuyProduct);
-
-            ////客户端发送查询背包项消息
-            //EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Backpack_Search, OnBackpackSearch);
-
-            ////客户端发送查询装备详情消息
-            //EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_SearchEquipDetail, OnSearchEquipDetail);
-
-            ////客户端发送查询装备详情消息
-            //EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_SellToSys, OnSellToSys);
-
-            ////客户端发送使用道具消息
-            //EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_UseItem, OnUseItem);
-
-            ////客户端发送穿戴装备消息
-            //EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_EquipPut, OnEquipPut);
-            #endregion
-
         }
 
         public override void Dispose()
@@ -120,27 +100,6 @@ namespace GameServerApp.Controller
             #region 任务相关
             EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Task_SearchTask, OnTaskSearchTask);
             #endregion
-
-            #region 商城背包
-            //客户端发送购买商城物品消息
-            EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Shop_BuyProduct, OnShopBuyProduct);
-
-            ////客户端发送查询背包项消息
-            //EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Backpack_Search, OnBackpackSearch);
-
-            ////客户端发送查询装备详情消息
-            //EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_SearchEquipDetail, OnSearchEquipDetail);
-
-            ////客户端发送查询装备详情消息
-            //EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_SellToSys, OnSellToSys);
-
-            ////客户端发送使用道具消息
-            //EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_UseItem, OnUseItem);
-
-            ////客户端发送穿戴装备消息
-            //EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_EquipPut, OnEquipPut);
-            #endregion
-
         }
 
         //=====================协议监听 调用方法=================================
@@ -601,8 +560,6 @@ namespace GameServerApp.Controller
 
         #region 任务相关
 
-        #region OnTaskSearchTask 任务查询
-
         private void OnTaskSearchTask(Role role, byte[] buffer)
         {
             //测试环境 直接给客户端发送伪数据
@@ -621,107 +578,6 @@ namespace GameServerApp.Controller
 
             proto.TaskCount = proto.CurrTaskItemList.Count;
             role._clientSocket.SendMsg(proto.ToArray());
-        }
-        #endregion
-
-        #endregion
-
-        #region 商城相关
-        /// <summary>
-        /// 客户端发送购买商城物品消息
-        /// </summary>
-        /// <param name="role"></param>
-        /// <param name="buffer"></param>
-        private void OnShopBuyProduct(Role role, byte[] buffer)
-        {
-            Shop_BuyProductProto proto = Shop_BuyProductProto.GetProto(buffer);
-            OnShopBuyProductReturn(role, proto.ProductId);
-        }
-
-        /// <summary>
-        /// 服务器返回购买商城物品消息
-        /// </summary>
-        /// <param name="role"></param>
-        private void OnShopBuyProductReturn(Role role, int productId)
-        {
-            bool hasError = false;
-            int msgCode = 102009;
-            int oldMoney = role.Money; //原始元宝
-
-            //1.查询玩家要购买的商品是否存在 如果商品不存在 提示 购买失败 您选择的商品不存在
-            //这个productId 就是Shop表中的Id 所以这里就是查询的Shop表
-            ShopEntity entity = ShopDBModel.Instance.Get(productId);
-            if (entity == null)
-            {
-                hasError = true;
-                msgCode = 102007;
-            }
-
-            //2.查询玩家拥有的元宝 是否足够支持这个商品 如果不够 提示 购买失败 您的元宝不足 请先充值
-            if (!hasError)
-            {
-                if (entity.Price > role.Money) //如果这个商品价格 超过玩家拥有的元宝
-                {
-                    hasError = true;
-                    msgCode = 102008;
-                }
-            }
-
-            //3.扣除玩家身上的元宝 并添加购买日志
-            if (!hasError)
-            {
-                //减掉玩家对象上的元宝
-                role.Money -= entity.Price;
-
-                //减掉数据库中 玩家的元宝
-                Dictionary<string, object> param = new Dictionary<string, object>();
-                param["@Id"] = role.RoleId;
-                param["@Money"] = role.Money;
-                RoleCacheModel.Instance.Update("[Money]= @Money", "Id=@Id", param); //更新数据库
-
-                //添加购买日志
-                Log_ShopBuyProductEntity logEntity = new Log_ShopBuyProductEntity();
-                logEntity.Status = Mmcoy.Framework.AbstractBase.EnumEntityStatus.Released;
-                logEntity.RoleId = role.RoleId;
-                logEntity.ShopId = productId;
-                logEntity.GoodsType = (byte)entity.GoodsType;
-                logEntity.GoodsId = entity.GoodsId;
-                logEntity.GoodsCount = 1;
-                logEntity.CreateTime = DateTime.Now;
-                logEntity.UpdateTime = DateTime.Now;
-
-                Log_ShopBuyProductCacheModel.Instance.Create(logEntity);
-            }
-
-            List<Role_BackpackItemChangeEntity> changeList = null;
-
-            //4.给玩家的背包中添加购买到的物品
-            if (!hasError)
-            {
-                Role_BackpackCacheModel.Instance.Add(role.RoleId, GoodsInType.ShopBuy, new Role_BackpackAddItemEntity()
-                {
-                    GoodsType = (GoodsType)entity.GoodsType,
-                    GoodsId = entity.GoodsId,
-                    GoodsCount = 1
-                }, ref changeList);
-            }
-
-            Shop_BuyProductReturnProto proto = new Shop_BuyProductReturnProto();
-            proto.IsSuccess = !hasError;
-            proto.MsgCode = msgCode;
-            role._clientSocket.SendMsg(proto.ToArray());
-
-            //5.给玩家发送元宝更新消息
-            if (!hasError)
-            {
-                OnMondeyChangeReturn(role, oldMoney, role.Money, ChangeType.Reduce, MoneyAddType.None, MoneyReduceType.BuyShopProduct, (GoodsType)entity.GoodsType, entity.GoodsId);
-            }
-
-            //6.给玩家发送物品更新消息
-            if (!hasError)
-            {
-                OnGoodsChangeReturn(role, changeList);
-            }
         }
         #endregion
 
@@ -1029,92 +885,6 @@ namespace GameServerApp.Controller
                 proto.IsSuccess = false;
                 proto.MsgCode = 1000;
             }
-            role._clientSocket.SendMsg(proto.ToArray());
-        }
-        #endregion
-
-        #region 各种更新消息
-        /// <summary>
-        /// 发送元宝更新消息
-        /// </summary>
-        /// <param name="role"></param>
-        /// <param name="oldMoney">更新前元宝</param>
-        /// <param name="currMoney">更新后当前元宝</param>
-        /// <param name="changeType">更新方式 0=增加 1=减少</param>
-        /// <param name="addType">增加方式 1=充值 2=使用元宝票 3=系统奖励 4=GM奖励或补偿</param>
-        /// <param name="reduceType">减少方式 1=购买商城物品 2=兑换成元宝票 3=原地复活</param>
-        /// <param name="goodsType">物品类型 0=装备 1=道具 2=材料</param>
-        /// <param name="goodsId">物品编号</param>
-        private void OnMondeyChangeReturn(Role role, int oldMoney, int currMoney, ChangeType changeType, MoneyAddType addType, MoneyReduceType reduceType, GoodsType goodsType, int goodsId)
-        {
-            RoleData_MondeyChangeReturnProto proto = new RoleData_MondeyChangeReturnProto();
-            proto.OldMoney = oldMoney;
-            proto.CurrMoney = currMoney;
-            proto.ChangeType = (byte)changeType;
-            proto.AddType = (byte)addType;
-            proto.ReduceType = (byte)reduceType;
-            proto.GoodsType = (byte)goodsType;
-            proto.GoodsId = goodsId;
-
-            role._clientSocket.SendMsg(proto.ToArray());
-        }
-
-        /// <summary>
-        /// 服务器返回金币更新消息
-        /// </summary>
-        /// <param name="role"></param>
-        /// <param name="oldGold"></param>
-        /// <param name="currGold"></param>
-        /// <param name="changeType"></param>
-        /// <param name="goldAddType"></param>
-        /// <param name="goldReduceType"></param>
-        /// <param name="goodsType"></param>
-        /// <param name="goodsId"></param>
-        private void OnGoldChangeReturn(Role role, int oldGold, int currGold, ChangeType changeType,
-            GoldAddType goldAddType, GoldReduceType goldReduceType, GoodsType goodsType, int goodsId)
-        {
-            RoleData_GoldChangeReturnProto proto = new RoleData_GoldChangeReturnProto();
-            proto.OldGold = oldGold;
-            proto.CurrGold = currGold;
-            proto.ChangeType = (byte)changeType;
-            proto.AddType = (byte)goldAddType;
-            proto.ReduceType = (byte)goldReduceType;
-            proto.GoodsType = (byte)goodsType;
-            proto.GoodsId = goodsId;
-
-            role._clientSocket.SendMsg(proto.ToArray());
-        }
-
-        /// <summary>
-        /// 服务器发送背包项更新消息
-        /// </summary>
-        /// <param name="role"></param>
-        /// <param name="lst"></param>
-        private void OnGoodsChangeReturn(Role role, List<Role_BackpackItemChangeEntity> lst)
-        {
-            //把更新消息 发给客户端
-            Backpack_GoodsChangeReturnProto proto = new Backpack_GoodsChangeReturnProto();
-
-            proto.BackpackItemChangeCount = lst.Count;
-            proto.ItemList = new List<Backpack_GoodsChangeReturnProto.ChangeItem>();
-
-            //Console.WriteLine("服务器发送背包项更新消息==>>" + proto.BackpackItemChangeCount.ToString());
-
-            for (int i = 0; i < lst.Count; i++)
-            {
-                Role_BackpackItemChangeEntity entity = lst[i];
-
-                proto.ItemList.Add(new Backpack_GoodsChangeReturnProto.ChangeItem()
-                {
-                    BackpackId = entity.BackpackId,
-                    ChangeType = (byte)entity.Type,
-                    GoodsType = (byte)entity.GoodsType,
-                    GoodsId = entity.GoodsId,
-                    GoodsCount = entity.GoodsCount,
-                    GoodsServerId = entity.GoodsServerId
-                });
-            }
-
             role._clientSocket.SendMsg(proto.ToArray());
         }
         #endregion
