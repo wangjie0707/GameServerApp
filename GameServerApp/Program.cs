@@ -92,15 +92,6 @@ namespace GameServerApp
 
 
 
-
-
-
-
-
-
-
-
-
             //Console.WriteLine(DBConn.DBGameServer);
             Console.ReadLine();
         }
