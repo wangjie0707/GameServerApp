@@ -430,8 +430,8 @@ namespace GameServerApp.Controller
             //4.添加获得物品记录
             List<GoodsItem> getGoodsList = proto.GetGoodsList;
 
-            ////添加到背包的物品集合
-            //List<Role_BackpackAddItemEntity> lst = new List<Role_BackpackAddItemEntity>();
+            //添加到背包的物品集合
+            List<Role_BackpackAddItemEntity> lst = new List<Role_BackpackAddItemEntity>();
 
             for (int i = 0; i < getGoodsList.Count; i++)
             {
@@ -448,41 +448,41 @@ namespace GameServerApp.Controller
 
                 Log_ReceiveGoodsDBModel.Instance.Create(m_Log_ReceiveGoods);
 
-                //Role_BackpackAddItemEntity entity = null;
+                Role_BackpackAddItemEntity entity = null;
 
-                ////先查找集合中 是否已经有这个物品
-                //for (int j = 0; j < lst.Count; j++)
-                //{
-                //    if (lst[j].GoodsId == getGoodsList[i].GoodsId && lst[j].GoodsType == (GoodsType)getGoodsList[i].GoodsType)
-                //    {
-                //        entity = lst[j];
-                //        break;
-                //    }
-                //}
+                //先查找集合中 是否已经有这个物品
+                for (int j = 0; j < lst.Count; j++)
+                {
+                    if (lst[j].GoodsId == getGoodsList[i].GoodsId && lst[j].GoodsType == (GoodsType)getGoodsList[i].GoodsType)
+                    {
+                        entity = lst[j];
+                        break;
+                    }
+                }
 
-                //if (entity != null)
-                //{
-                //    //如果有这个物品 则把物品的数量增加
-                //    entity.GoodsCount += getGoodsList[i].GoodsCount;
-                //}
-                //else
-                //{
-                //    //如果没有这个物品 则实例化新对象并赋值
-                //    entity = new Role_BackpackAddItemEntity()
-                //    {
-                //        GoodsType = (GoodsType)getGoodsList[i].GoodsType,
-                //        GoodsId = getGoodsList[i].GoodsId,
-                //        GoodsCount = getGoodsList[i].GoodsCount
-                //    };
+                if (entity != null)
+                {
+                    //如果有这个物品 则把物品的数量增加
+                    entity.GoodsCount += getGoodsList[i].GoodsCount;
+                }
+                else
+                {
+                    //如果没有这个物品 则实例化新对象并赋值
+                    entity = new Role_BackpackAddItemEntity()
+                    {
+                        GoodsType = (GoodsType)getGoodsList[i].GoodsType,
+                        GoodsId = getGoodsList[i].GoodsId,
+                        GoodsCount = getGoodsList[i].GoodsCount
+                    };
 
-                //    //然后加入列表
-                //    lst.Add(entity);
-                //}
+                    //然后加入列表
+                    lst.Add(entity);
+                }
             }
 
-            //List<Role_BackpackItemChangeEntity> changeList = null;
-            ////同时把这些物品 加入玩家的背包中
-            //Role_BackpackCacheModel.Instance.Add(role.RoleId, GoodsInType.DropOut, lst, ref changeList);
+            List<Role_BackpackItemChangeEntity> changeList = null;
+            //同时把这些物品 加入玩家的背包中
+            Role_BackpackCacheModel.Instance.Add(role.RoleId, GoodsInType.DropOut, lst, ref changeList);
 
             //5.给玩家添加经验和金币 设置最后通关的游戏关卡Id
             {
