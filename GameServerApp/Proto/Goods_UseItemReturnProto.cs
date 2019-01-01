@@ -1,6 +1,6 @@
 ﻿//===================================================
 //开 发 者：WY 
-//创建时间：2019-01-01 20:57:11
+//创建时间：2019-01-01 20:56:47
 //备    注：
 //===================================================
 using System.Collections;
@@ -8,18 +8,16 @@ using System.Collections.Generic;
 using System;
 
 /// <summary>
-/// 服务器返回穿戴消息
+/// 服务器返回使用道具消息
 /// </summary>
-public struct Goods_EquipPutReturnProto : IProto
+public struct Goods_UseItemReturnProto : IProto
 {
-    public ushort ProtoCode { get { return 16013; } }
-    public string ProtoEnName { get { return "Goods_EquipPutReturn"; } }
+    public ushort ProtoCode { get { return 16011; } }
+    public string ProtoEnName { get { return "Goods_UseItemReturn"; } }
 
     public bool IsSuccess; //是否成功
     public int MsgCode; //消息码
-    public byte Type; //0=穿上 1=脱下
-    public int GoodsId; //装备编号
-    public int GoodsServerId; //装备服务器端编号
+    public int GoodsId; //物品编号
 
     public byte[] ToArray()
     {
@@ -29,34 +27,30 @@ public struct Goods_EquipPutReturnProto : IProto
             ms.WriteBool(IsSuccess);
             if(IsSuccess)
             {
-                ms.WriteByte(Type);
                 ms.WriteInt(GoodsId);
-                ms.WriteInt(GoodsServerId);
             }
             else
             {
+                ms.WriteInt(MsgCode);
             }
-            ms.WriteInt(MsgCode);
             return ms.ToArray();
         }
     }
 
-    public static Goods_EquipPutReturnProto GetProto(byte[] buffer)
+    public static Goods_UseItemReturnProto GetProto(byte[] buffer)
     {
-        Goods_EquipPutReturnProto proto = new Goods_EquipPutReturnProto();
+        Goods_UseItemReturnProto proto = new Goods_UseItemReturnProto();
         using (mmo_memotyStream ms = new mmo_memotyStream(buffer))
         {
             proto.IsSuccess = ms.ReadBool();
             if(proto.IsSuccess)
             {
-                proto.Type = (byte)ms.ReadByte();
                 proto.GoodsId = ms.ReadInt();
-                proto.GoodsServerId = ms.ReadInt();
             }
             else
             {
+                proto.MsgCode = ms.ReadInt();
             }
-            proto.MsgCode = ms.ReadInt();
         }
         return proto;
     }

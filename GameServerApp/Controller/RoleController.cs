@@ -67,20 +67,20 @@ namespace GameServerApp.Controller
             //客户端发送购买商城物品消息
             EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Shop_BuyProduct, OnShopBuyProduct);
 
-            ////客户端发送查询背包项消息
-            //EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Backpack_Search, OnBackpackSearch);
+            //客户端发送查询背包项消息
+            EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Backpack_Search, OnBackpackSearch);
 
-            ////客户端发送查询装备详情消息
-            //EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_SearchEquipDetail, OnSearchEquipDetail);
+            //客户端发送查询装备详情消息
+            EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_SearchEquipDetail, OnSearchEquipDetail);
 
-            ////客户端发送查询装备详情消息
-            //EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_SellToSys, OnSellToSys);
+            //客户端发送查询装备详情消息
+            EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_SellToSys, OnSellToSys);
 
-            ////客户端发送使用道具消息
-            //EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_UseItem, OnUseItem);
+            //客户端发送使用道具消息
+            EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_UseItem, OnUseItem);
 
-            ////客户端发送穿戴装备消息
-            //EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_EquipPut, OnEquipPut);
+            //客户端发送穿戴装备消息
+            EventDispatcher.Instance.AddEventListener(ProtoCodeDef.Goods_EquipPut, OnEquipPut);
             #endregion
 
         }
@@ -125,20 +125,20 @@ namespace GameServerApp.Controller
             //客户端发送购买商城物品消息
             EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Shop_BuyProduct, OnShopBuyProduct);
 
-            ////客户端发送查询背包项消息
-            //EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Backpack_Search, OnBackpackSearch);
+            //客户端发送查询背包项消息
+            EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Backpack_Search, OnBackpackSearch);
 
-            ////客户端发送查询装备详情消息
-            //EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_SearchEquipDetail, OnSearchEquipDetail);
+            //客户端发送查询装备详情消息
+            EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_SearchEquipDetail, OnSearchEquipDetail);
 
-            ////客户端发送查询装备详情消息
-            //EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_SellToSys, OnSellToSys);
+            //客户端发送查询装备详情消息
+            EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_SellToSys, OnSellToSys);
 
-            ////客户端发送使用道具消息
-            //EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_UseItem, OnUseItem);
+            //客户端发送使用道具消息
+            EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_UseItem, OnUseItem);
 
-            ////客户端发送穿戴装备消息
-            //EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_EquipPut, OnEquipPut);
+            //客户端发送穿戴装备消息
+            EventDispatcher.Instance.RemoveEventListener(ProtoCodeDef.Goods_EquipPut, OnEquipPut);
             #endregion
 
         }
@@ -500,8 +500,8 @@ namespace GameServerApp.Controller
             retProto.IsSuccess = true;
             role._clientSocket.SendMsg(retProto.ToArray());
 
-            ////给玩家发送物品更新消息
-            //OnGoodsChangeReturn(role, changeList);
+            //给玩家发送物品更新消息
+            OnGoodsChangeReturn(role, changeList);
         }
         #endregion
 
@@ -721,6 +721,230 @@ namespace GameServerApp.Controller
             if (!hasError)
             {
                 OnGoodsChangeReturn(role, changeList);
+            }
+        }
+
+        /// <summary>
+        /// 客户端发送查询背包项消息
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="buffer"></param>
+        private void OnBackpackSearch(Role role, byte[] buffer)
+        {
+            OnBackpackSearchReturn(role);
+        }
+
+        /// <summary>
+        /// 服务器返回查询背包项消息
+        /// </summary>
+        private void OnBackpackSearchReturn(Role role)
+        {
+
+            Backpack_SearchReturnProto proto = new Backpack_SearchReturnProto();
+
+            //查询玩家的背包项
+            List<Role_BackpackEntity> lst = Role_BackpackCacheModel.Instance.GetList(condition: string.Format("[RoleId]={0}", role.RoleId));
+
+            proto.BackpackItemCount = lst.Count;
+            proto.ItemList = new List<Backpack_SearchReturnProto.BackpackItem>();
+
+            for (int i = 0; i < lst.Count; i++)
+            {
+                proto.ItemList.Add(new Backpack_SearchReturnProto.BackpackItem()
+                {
+                    BackpackItemId = lst[i].Id.ToInt(),
+                    GoodsType = lst[i].GoodsType,
+                    GoodsId = lst[i].GoodsId,
+                    GoodsServerId = lst[i].GoodsServerId,
+                    GoodsOverlayCount = lst[i].GoodsOverlayCount
+                });
+            }
+
+            role._clientSocket.SendMsg(proto.ToArray());
+        }
+
+        /// <summary>
+        /// 客户端发送查询装备详情消息
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="buffer"></param>
+        private void OnSearchEquipDetail(Role role, byte[] buffer)
+        {
+            Goods_SearchEquipDetailProto proto = Goods_SearchEquipDetailProto.GetProto(buffer);
+            OnSearchEquipDetailReturn(role, proto.GoodsServerId);
+        }
+
+        /// <summary>
+        /// 服务器返回查询装备详情消息
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="goodsServerId"></param>
+        private void OnSearchEquipDetailReturn(Role role, int goodsServerId)
+        {
+            Goods_SearchEquipDetailReturnProto proto = new Goods_SearchEquipDetailReturnProto();
+
+            Role_EquipEntity entity = Role_EquipCacheModel.Instance.GetEntity(goodsServerId);
+            proto.EnchantLevel = entity.EnchantLevel;
+            proto.BaseAttr1Type = entity.BaseAttr1Type;
+            proto.BaseAttr1Value = entity.BaseAttr1Value;
+            proto.BaseAttr2Type = entity.BaseAttr2Type;
+            proto.BaseAttr2Value = entity.BaseAttr2Value;
+            proto.HP = entity.HP;
+            proto.MP = entity.MP;
+            proto.Attack = entity.Attack;
+            proto.Defense = entity.Defense;
+            proto.Hit = entity.Hit;
+            proto.Dodge = entity.Dodge;
+            proto.Cri = entity.Cri;
+            proto.Res = entity.Res;
+            proto.IsPutOn = (entity.IsPutOn ? (byte)1 : (byte)0);
+
+            role._clientSocket.SendMsg(proto.ToArray());
+        }
+
+        /// <summary>
+        /// 客户端发送出售物品给系统
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="buffer"></param>
+        private void OnSellToSys(Role role, byte[] buffer)
+        {
+            Goods_SellToSysProto proto = Goods_SellToSysProto.GetProto(buffer);
+
+            //执行出售物品的操作
+            MFReturnValue<bool> retValue = Role_BackpackCacheModel.Instance.SellToSys(role.RoleId, proto.roleBackpackId, proto.GoodsType, proto.GoodsId, proto.GoodsServerId, proto.SellCount);
+
+            if (!retValue.HasError)
+            {
+                List<Role_BackpackItemChangeEntity> lst = retValue.GetOutputValue<List<Role_BackpackItemChangeEntity>>("BackpackItemChange");
+
+                OnGoodsChangeReturn(role, lst);
+
+                //总售价
+                int totalSellPrice = retValue.GetOutputValue<int>("TotalSellPrice");
+
+                //更新玩家身上的金币数量
+                RoleEntity entity = RoleCacheModel.Instance.GetEntity(role.RoleId);
+
+                int oldGold = entity.Gold; //旧的金币
+                int currGold = oldGold + totalSellPrice;
+
+                Dictionary<string, object> param = new Dictionary<string, object>();
+                param["@Id"] = role.RoleId;
+                param["@Gold"] = currGold;
+
+                RoleCacheModel.Instance.Update("[Gold]= @Gold", "Id=@Id", param); //更新数据库
+
+                OnGoldChangeReturn(role, oldGold, currGold, ChangeType.Add, GoldAddType.GoodsSell, GoldReduceType.BubGoods, (GoodsType)proto.GoodsType, proto.GoodsId);
+            }
+            else
+            {
+                Console.WriteLine(retValue.Error.Message);
+            }
+        }
+
+        /// <summary>
+        /// 客户端发送使用道具消息
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="buffer"></param>
+        private void OnUseItem(Role role, byte[] buffer)
+        {
+            Goods_UseItemProto proto = Goods_UseItemProto.GetProto(buffer);
+
+            MFReturnValue<bool> retValue = Role_BackpackCacheModel.Instance.UseItem(role.RoleId, proto.BackpackItemId, proto.GoodsId);
+
+            if (!retValue.HasError)
+            {
+                //得到物品更新列表 但是这个列表只是物品减少的 就是刚才使用的道具消失
+                List<Role_BackpackItemChangeEntity> lst = retValue.GetOutputValue<List<Role_BackpackItemChangeEntity>>("BackpackItemChange");
+
+                //发送物品更新消息
+                OnGoodsChangeReturn(role, lst);
+
+                //虚拟资产更新列表 指的是不进入背包的 非物品更新
+                List<VirtualItemUpdateEntity> virtualItemUpdateList = retValue.GetOutputValue<List<VirtualItemUpdateEntity>>("VirtualItemUpdateList");
+
+                for (int i = 0; i < virtualItemUpdateList.Count; i++)
+                {
+                    VirtualItemUpdateEntity entity = virtualItemUpdateList[i];
+
+                    if (entity.Type == ItemUsedAcquisitionType.Money)
+                    {
+                        //发送元宝更新消息
+                        OnMondeyChangeReturn(role, entity.OldValue, entity.CurrValue, (ChangeType)entity.ChangeType,
+                             MoneyAddType.ItemUsed, MoneyReduceType.None, GoodsType.Item, proto.GoodsId);
+                    }
+                    else if (entity.Type == ItemUsedAcquisitionType.Gold)
+                    {
+                        //发送金币更新消息
+                        OnGoldChangeReturn(role, entity.OldValue, entity.CurrValue, (ChangeType)entity.ChangeType,
+                             GoldAddType.ItemUsed, GoldReduceType.None, GoodsType.Item, proto.GoodsId);
+                    }
+                    else if (entity.Type == ItemUsedAcquisitionType.Exp)
+                    {
+                        //发送经验更新消息
+                        //检查是否可以升级 如果可以升级 发送升级消息
+                    }
+                }
+
+                OnUseItemRetrun(role, isSuccess: true, goodsId: proto.GoodsId);
+            }
+            else
+            {
+                OnUseItemRetrun(role, false, msgCode: retValue.ReturnCode, goodsId: proto.GoodsId);
+            }
+        }
+
+        /// <summary>
+        ///  服务器返回道具使用消息
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="isSuccess"></param>
+        /// <param name="msgCode"></param>
+        /// <param name="goodsId"></param>
+        private void OnUseItemRetrun(Role role, bool isSuccess = true, int msgCode = 0, int goodsId = 0)
+        {
+            Goods_UseItemReturnProto proto = new Goods_UseItemReturnProto();
+            proto.IsSuccess = isSuccess;
+            proto.MsgCode = msgCode;
+            proto.GoodsId = goodsId;
+
+            role._clientSocket.SendMsg(proto.ToArray());
+        }
+
+        /// <summary>
+        /// 客户端发送穿戴装备消息
+        /// </summary>
+        /// <param name="role"></param>
+        /// <param name="buffer"></param>
+        private void OnEquipPut(Role role, byte[] buffer)
+        {
+            Goods_EquipPutProto proto = Goods_EquipPutProto.GetProto(buffer);
+
+            if (proto.Type == 0)
+            {
+                //穿上
+                List<Role_BackpackItemChangeEntity> lst = new List<Role_BackpackItemChangeEntity>();
+                RoleCacheModel.Instance.EquipPutOn(role.RoleId, proto.GoodsId, proto.GoodsServerId, ref lst);
+
+                //发送物品更新消息
+                OnGoodsChangeReturn(role, lst);
+
+                //发送角色信息更新消息
+                OnSelectRoleInfoReturn(role);
+            }
+            else
+            {
+                //脱下
+                List<Role_BackpackItemChangeEntity> lst = new List<Role_BackpackItemChangeEntity>();
+                RoleCacheModel.Instance.EquipPutOff(role.RoleId, proto.GoodsId, proto.GoodsServerId, ref lst);
+
+                //发送物品更新消息
+                OnGoodsChangeReturn(role, lst);
+
+                //发送角色信息更新消息
+                OnSelectRoleInfoReturn(role);
             }
         }
         #endregion
@@ -1100,7 +1324,7 @@ namespace GameServerApp.Controller
             proto.BackpackItemChangeCount = lst.Count;
             proto.ItemList = new List<Backpack_GoodsChangeReturnProto.ChangeItem>();
 
-            //Console.WriteLine("服务器发送背包项更新消息==>>" + proto.BackpackItemChangeCount.ToString());
+            Console.WriteLine("服务器发送背包项更新消息==>>" + proto.BackpackItemChangeCount.ToString());
 
             for (int i = 0; i < lst.Count; i++)
             {
