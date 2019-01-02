@@ -748,6 +748,8 @@ namespace GameServerApp.Controller
             proto.BackpackItemCount = lst.Count;
             proto.ItemList = new List<Backpack_SearchReturnProto.BackpackItem>();
 
+            Console.WriteLine("返回背包项数据-数量" + lst.Count);
+
             for (int i = 0; i < lst.Count; i++)
             {
                 proto.ItemList.Add(new Backpack_SearchReturnProto.BackpackItem()
@@ -1228,6 +1230,8 @@ namespace GameServerApp.Controller
             RoleOperation_EnterGameReturnProto proto = new RoleOperation_EnterGameReturnProto();
             proto.IsSuccess = true;
             role._clientSocket.SendMsg(proto.ToArray());
+
+            OnBackpackSearchReturn(role);
 
             OnSelectRoleInfoReturn(role);
 
