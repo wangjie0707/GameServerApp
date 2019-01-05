@@ -1050,6 +1050,55 @@ namespace GameServerApp.Controller
                 proto.Cri = entity.Cri;
                 proto.Res = entity.Res;
                 proto.Fighting = entity.Fighting;
+
+                proto.Equip_Weapon = entity.Equip_Weapon;
+                if (proto.Equip_Weapon > 0)
+                {
+                    proto.Equip_WeaponTableId = Role_EquipCacheModel.Instance.GetEntity(proto.Equip_Weapon).EquipId;
+                }
+
+                proto.Equip_Pants = entity.Equip_Pants;
+                if (proto.Equip_Pants > 0)
+                {
+                    proto.Equip_PantsTableId = Role_EquipCacheModel.Instance.GetEntity(proto.Equip_Pants).EquipId;
+                }
+
+                proto.Equip_Clothes = entity.Equip_Clothes;
+                if (proto.Equip_Clothes > 0)
+                {
+                    proto.Equip_ClothesTableId = Role_EquipCacheModel.Instance.GetEntity(proto.Equip_Clothes).EquipId;
+                }
+
+                proto.Equip_Belt = entity.Equip_Belt;
+                if (proto.Equip_Belt > 0)
+                {
+                    proto.Equip_BeltTableId = Role_EquipCacheModel.Instance.GetEntity(proto.Equip_Belt).EquipId;
+                }
+
+                proto.Equip_Cuff = entity.Equip_Cuff;
+                if (proto.Equip_Cuff > 0)
+                {
+                    proto.Equip_CuffTableId = Role_EquipCacheModel.Instance.GetEntity(proto.Equip_Cuff).EquipId;
+                }
+
+                proto.Equip_Necklace = entity.Equip_Necklace;
+                if (proto.Equip_Necklace > 0)
+                {
+                    proto.Equip_NecklaceTableId = Role_EquipCacheModel.Instance.GetEntity(proto.Equip_Necklace).EquipId;
+                }
+
+                proto.Equip_Shoe = entity.Equip_Shoe;
+                if (proto.Equip_Shoe > 0)
+                {
+                    proto.Equip_ShoeTableId = Role_EquipCacheModel.Instance.GetEntity(proto.Equip_Shoe).EquipId;
+                }
+
+                proto.Equip_Ring = entity.Equip_Ring;
+                if (proto.Equip_Ring > 0)
+                {
+                    proto.Equip_RingTableId = Role_EquipCacheModel.Instance.GetEntity(proto.Equip_Ring).EquipId;
+                }
+
                 proto.LastInWorldMapId = entity.LastInWorldMapId;
                 proto.LastInWorldMapPos = entity.LastInWorldMapPos;
 
